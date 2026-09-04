@@ -1,0 +1,399 @@
+◇ injected env (15) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from ../../.env // tip: ◈ secrets for agents [www.dotenvx.com]
+MongoDB Connected: localhost
+Server running on port 5000
+(node:98347) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"orderNumber":1} for model "Order". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:98347) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"user":1} for model "Cart". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:98347) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"user":1} for model "Wishlist". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:98347) [MONGOOSE] Warning: mongoose: Duplicate schema index on {"slug":1} for model "Category". This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+Attention: Clerk collects telemetry data from its SDKs when connected to development instances.
+The data collected is used to inform Clerk's product roadmap.
+To learn more, including how to opt-out from the telemetry program, visit: https://clerk.com/docs/telemetry.
+
+[0mPOST /api/categories [32m201[0m 5522.768 ms - 316[0m
+[0mGET /api/categories [32m200[0m 12.480 ms - 1259[0m
+[0mDELETE /api/categories/6a7ec73f86b1a84ba9066d7c [32m200[0m 67.609 ms - 30[0m
+[0mGET /api/categories [32m200[0m 13.173 ms - 1030[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [32m200[0m 33.647 ms - 5903[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 43.710 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 20.528 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 23.366 ms - -[0m
+[0mGET /api/products?sort=-createdAt&page=1&limit=12 [32m200[0m 34.005 ms - 14675[0m
+[0mGET /api/products?sort=-createdAt&page=1&limit=12 [36m304[0m 18.778 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 22.054 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 35.558 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 22.070 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 24.245 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 16.358 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 24.298 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 19.304 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 27.175 ms - -[0m
+[0mPOST /api/auth/sync [32m200[0m 11.788 ms - 414[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 17.498 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 23.326 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 22.135 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 36.278 ms - -[0m
+[0mPOST /api/auth/sync [32m200[0m 10.325 ms - 414[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [32m200[0m 28.034 ms - 5903[0m
+[0mGET /api/products?featured=true&limit=4 [32m200[0m 45.078 ms - 6912[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 43.364 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 46.424 ms - -[0m
+[0mGET /api/products/slug/essential-oversized-tshirt-men [32m200[0m 42.540 ms - 1552[0m
+[0mGET /api/products/slug/essential-oversized-tshirt-men [36m304[0m 19.319 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 18.912 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 30.075 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 20.989 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 12.987 ms - -[0m
+[0mPOST /api/auth/sync [32m200[0m 7.715 ms - 414[0m
+[0mPOST /api/auth/sync [32m200[0m 11.361 ms - 414[0m
+[0mGET /api/auth/me [36m304[0m 2884.992 ms - -[0m
+[0mGET /api/admin/orders?limit=5 [36m304[0m 25.540 ms - -[0m
+[0mGET /api/admin/dashboard [36m304[0m 49.268 ms - -[0m
+[0mGET /api/admin/orders?limit=5 [36m304[0m 26.041 ms - -[0m
+[0mGET /api/admin/dashboard [36m304[0m 39.327 ms - -[0m
+[0mGET /api/admin/customers? [36m304[0m 12.466 ms - -[0m
+[0mGET /api/admin/orders? [36m304[0m 17.848 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 48.059 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 65.771 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 22.721 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 23.167 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 45.185 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 64.641 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 26.138 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 30.617 ms - -[0m
+[0mPOST /api/auth/sync [32m200[0m 17.880 ms - 414[0m
+[0mGET /api/products?sort=-createdAt&page=1&limit=12 [36m304[0m 26.420 ms - -[0m
+[0mGET /api/products?sort=-createdAt&page=1&limit=12 [36m304[0m 28.749 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 22.094 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 24.473 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 24.690 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 40.854 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 59.048 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 73.182 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 47.577 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 42.559 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 620.253 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 613.387 ms - -[0m
+[0mPOST /api/auth/sync [31m500[0m 977.629 ms - 133[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 106.030 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 125.575 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 49.897 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 86.038 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 54.015 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 58.547 ms - -[0m
+[0mPOST /api/auth/sync [31m500[0m 1100.100 ms - 133[0m
+[0mPOST /api/auth/sync [31m500[0m 1716.857 ms - 133[0m
+[0mPOST /api/auth/sync [31m500[0m 82.181 ms - 133[0m
+[0mPOST /api/auth/sync [31m500[0m 148.903 ms - 133[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 2340.748 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 57.804 ms - 40[0m
+[0mPOST /api/auth/sync [31m500[0m 72.932 ms - 133[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/wishlist [33m401[0m 58.048 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/wishlist [33m401[0m 58.904 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 56.939 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 69.960 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/users/addresses [33m401[0m 62.724 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/users/addresses [33m401[0m 55.219 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/orders/my [33m401[0m 59.019 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/orders/my [33m401[0m 57.411 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 65.284 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 59.257 ms - 40[0m
+[0mGET /api/products?sort=-createdAt&page=1&limit=12 [36m304[0m 211.864 ms - -[0m
+[0mGET /api/products?sort=-createdAt&page=1&limit=12 [36m304[0m 89.224 ms - -[0m
+[0mGET /api/products?sort=price_asc&page=1&limit=12 [32m200[0m 409.182 ms - 14675[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 137.184 ms - 40[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 58.211 ms - 40[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 19.715 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 27.633 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 14.384 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 13.915 ms - -[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 663.458 ms - 40[0m
+[0mPOST /api/auth/sync [31m500[0m 679.916 ms - 133[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 68.112 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 83.223 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 79.443 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 91.454 ms - -[0m
+Protect middleware failed: no auth.userId {
+  tokenType: 'session_token',
+  sessionClaims: null,
+  sessionId: null,
+  sessionStatus: null,
+  userId: null,
+  actor: null,
+  orgId: null,
+  orgRole: null,
+  orgSlug: null,
+  orgPermissions: null,
+  factorVerificationAge: null,
+  getToken: [Function: getToken],
+  has: [Function: has],
+  debug: [Function (anonymous)],
+  isAuthenticated: false
+}
+[0mGET /api/auth/me [33m401[0m 582.757 ms - 40[0m
+[0mPOST /api/auth/sync [31m500[0m 595.281 ms - 133[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 84.961 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 106.618 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 141.996 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 154.341 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 22.958 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 40.471 ms - -[0m
+[0mGET /api/products?sort=-createdAt&limit=4 [36m304[0m 34.540 ms - -[0m
+[0mGET /api/products?featured=true&limit=4 [36m304[0m 51.327 ms - -[0m
+[0mPOST /api/auth/sync [31m500[0m 501.831 ms - 133[0m

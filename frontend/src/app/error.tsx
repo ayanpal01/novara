@@ -36,9 +36,9 @@ export default function GlobalError({
         <Button variant="outline" onClick={() => reset()}>
           Try again
         </Button>
-        <Button asChild>
-          <Link href="/">Return Home</Link>
-        </Button>
+        <Link href="/">
+          <Button>Return Home</Button>
+        </Link>
       </div>
     </div>
   );

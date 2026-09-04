@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Star, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,7 +22,8 @@ interface ProductReviewsProps {
 }
 
 export default function ProductReviews({ productId, reviews: initialReviews }: ProductReviewsProps) {
-  const { isSignedIn, getToken } = useAuth();
+  const { getToken } = useAuth();
+  const { isSignedIn } = useUser();
   const reviews = initialReviews || [];
   
   const [rating, setRating] = useState(5);
@@ -33,7 +34,7 @@ export default function ProductReviews({ productId, reviews: initialReviews }: P
   // Calculate statistics
   const stats = useMemo(() => {
     const total = reviews.length;
-    if (total === 0) return { average: 0, breakdown: [0, 0, 0, 0, 0] };
+    if (total === 0) return { average: 0, breakdown: [0, 0, 0, 0, 0], total: 0 };
 
     const sum = reviews.reduce((acc, rev) => acc + rev.rating, 0);
     const average = (sum / total).toFixed(1);

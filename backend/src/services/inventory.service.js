@@ -5,9 +5,9 @@ const Product = require('../models/Product');
  * Validates stock and reduces inventory for the given items.
  * Should be used inside a transaction session.
  */
-exports.deductInventory = async (items, session) => {
+exports.deductInventory = async (items) => {
   for (const item of items) {
-    const product = await Product.findById(item.product).session(session);
+    const product = await Product.findById(item.product);
     if (!product) {
       throw new Error(`Product ${item.product} not found`);
     }
@@ -32,16 +32,16 @@ exports.deductInventory = async (items, session) => {
       product.stock -= item.qty;
     }
     
-    await product.save({ session });
+    await product.save();
   }
 };
 
 /**
  * Restores inventory for cancelled or failed orders.
  */
-exports.restoreInventory = async (items, session) => {
+exports.restoreInventory = async (items) => {
   for (const item of items) {
-    const product = await Product.findById(item.product).session(session);
+    const product = await Product.findById(item.product);
     if (!product) continue; // If product was deleted, we can't restore
 
     if (item.variant) {
@@ -53,6 +53,6 @@ exports.restoreInventory = async (items, session) => {
       product.stock += item.qty;
     }
     
-    await product.save({ session });
+    await product.save();
   }
 };

@@ -7,7 +7,7 @@ import api from '@/lib/axios';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, Plus, ChevronRight, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/contexts/AuthContext';;
 import Link from 'next/link';
 
 import AddressCard, { Address } from '@/components/address/AddressCard';
@@ -17,11 +17,14 @@ export default function CheckoutPage() {
   const { cartItems, clearCart } = useCartStore();
   const total = useCartTotal();
   const router = useRouter();
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const { user } = useUser();
+  const { isLoaded, getToken } = useAuth();
+  const { user, isSignedIn } = useUser();
   
   const [mounted, setMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'Razorpay' | 'COD'>('Razorpay');
+  const [deliveryStatus, setDeliveryStatus] = useState<{ eligible?: boolean, distance?: number, message?: string, maxDistance?: number } | null>(null);
+  const [checkingDelivery, setCheckingDelivery] = useState(false);
 
   // Address states
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
@@ -62,7 +65,40 @@ export default function CheckoutPage() {
     };
     
     fetchAddresses();
-  }, [isSignedIn, getToken]);
+  }, [isLoaded, isSignedIn, getToken]);
+
+  // Check delivery eligibility whenever address changes
+  useEffect(() => {
+    const checkDelivery = async () => {
+      if (!selectedAddressId || !savedAddresses.length) return;
+      const addr = savedAddresses.find(a => a._id === selectedAddressId);
+      if (!addr || !(addr as any).latitude || !(addr as any).longitude) {
+        setDeliveryStatus({ eligible: false, message: 'Please edit your address to include delivery coordinates (Location).' });
+        return;
+      }
+      
+      try {
+        setCheckingDelivery(true);
+        const { data } = await api.post('/delivery/check', {
+          latitude: (addr as any).latitude,
+          longitude: (addr as any).longitude
+        });
+        setDeliveryStatus({
+          eligible: data.isEligible,
+          distance: data.distance,
+          message: data.message,
+          maxDistance: data.maxDistance
+        });
+      } catch (error: any) {
+        console.error('Failed to check delivery', error);
+        setDeliveryStatus({ eligible: false, message: 'Failed to check delivery eligibility. Please try again.' });
+      } finally {
+        setCheckingDelivery(false);
+      }
+    };
+    
+    checkDelivery();
+  }, [selectedAddressId, savedAddresses]);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -115,19 +151,29 @@ export default function CheckoutPage() {
       const token = await getToken();
       
       const orderData = {
-        orderItems: cartItems.map(item => ({
+        orderItems: cartItems.map((item: any) => ({
           product: item._id, // legacy/fallback
           variantId: item.variant?._id,
+          size: item.size,
+          color: item.color,
           qty: item.qty,
         })),
         shippingAddress: selectedAddress,
+        paymentMethod
       };
 
       const { data } = await api.post('/orders/create-payment-order', orderData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      const { dbOrderId, razorpayOrderId, amount, currency } = data;
+      const { dbOrderId, razorpayOrderId, amount, currency, paymentMethod: returnedMethod } = data;
+
+      if (returnedMethod === 'COD') {
+        toast.success('Order placed successfully!');
+        clearCart();
+        router.push(`/checkout/success?order=${dbOrderId}`);
+        return;
+      }
 
       const isScriptLoaded = await loadRazorpayScript();
       if (!isScriptLoaded) {
@@ -225,9 +271,9 @@ export default function CheckoutPage() {
               {!isSignedIn ? (
                 <div className="bg-white p-6 border rounded-xl shadow-sm text-center">
                   <p className="text-muted-foreground mb-4">Please sign in to proceed with checkout.</p>
-                  <Button asChild>
-                    <Link href="/sign-in?redirect_url=/checkout">Sign In</Link>
-                  </Button>
+                  <Link href="/sign-in?redirect_url=/checkout">
+                    <Button>Sign In</Button>
+                  </Link>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -277,29 +323,82 @@ export default function CheckoutPage() {
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-black text-white text-xs">2</span>
                 Payment
               </h2>
+              <div className="bg-white p-6 border rounded-xl shadow-sm mb-6">
+                <h3 className="font-semibold mb-2">Delivery Eligibility</h3>
+                <p className="text-sm text-muted-foreground mb-4">We currently deliver within 200 KM of our store.</p>
+                
+                {checkingDelivery ? (
+                  <div className="p-4 bg-muted/20 animate-pulse rounded border text-sm text-center">Checking delivery distance...</div>
+                ) : deliveryStatus ? (
+                  <div className={`p-4 rounded border text-sm ${deliveryStatus.eligible ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+                    <p className="font-semibold">{deliveryStatus.eligible ? 'Delivery Available' : 'Delivery Not Available'}</p>
+                    <p>{deliveryStatus.message}</p>
+                    {deliveryStatus.distance && (
+                      <p className="mt-2 text-xs opacity-80">Distance from store: {deliveryStatus.distance} km</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-muted/20 rounded border text-sm text-center text-muted-foreground">Select an address to check delivery availability.</div>
+                )}
+              </div>
               
               <div className="bg-white p-6 border rounded-xl shadow-sm">
-                <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/10 mb-6">
-                  <div className="w-12 h-8 bg-black rounded flex items-center justify-center text-white font-bold text-xs">Rz</div>
-                  <div>
-                    <h4 className="font-semibold">Razorpay Secure</h4>
-                    <p className="text-xs text-muted-foreground">UPI, Credit/Debit Cards, NetBanking</p>
-                  </div>
+                
+                <div className="space-y-4 mb-6">
+                  {/* Razorpay Option */}
+                  <label 
+                    className={`flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'Razorpay' ? 'bg-muted/10 border-black ring-1 ring-black' : 'hover:border-black/30'}`}
+                  >
+                    <input 
+                      type="radio" 
+                      name="paymentMethod" 
+                      value="Razorpay" 
+                      checked={paymentMethod === 'Razorpay'} 
+                      onChange={(e) => setPaymentMethod(e.target.value as 'Razorpay' | 'COD')}
+                      className="accent-black w-4 h-4"
+                    />
+                    <div className="w-12 h-8 bg-black rounded flex items-center justify-center text-white font-bold text-xs shrink-0">Rz</div>
+                    <div>
+                      <h4 className="font-semibold">Razorpay Secure</h4>
+                      <p className="text-xs text-muted-foreground">UPI, Credit/Debit Cards, NetBanking</p>
+                    </div>
+                  </label>
+
+                  {/* Cash on Delivery Option (Dev only) */}
+                  <label 
+                    className={`flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'COD' ? 'bg-muted/10 border-black ring-1 ring-black' : 'hover:border-black/30'}`}
+                  >
+                    <input 
+                      type="radio" 
+                      name="paymentMethod" 
+                      value="COD" 
+                      checked={paymentMethod === 'COD'} 
+                      onChange={(e) => setPaymentMethod(e.target.value as 'Razorpay' | 'COD')}
+                      className="accent-black w-4 h-4"
+                    />
+                    <div className="w-12 h-8 bg-muted border border-black/20 rounded flex items-center justify-center text-black font-bold text-xs shrink-0">COD</div>
+                    <div>
+                      <h4 className="font-semibold">Cash on Delivery</h4>
+                      <p className="text-xs text-muted-foreground">Pay when your order arrives</p>
+                    </div>
+                  </label>
                 </div>
 
                 <Button 
                   onClick={handlePayment} 
                   size="lg" 
                   className="w-full text-base h-14 font-semibold group" 
-                  disabled={isProcessing || !isSignedIn || !selectedAddressId || isAddingAddress}
+                  disabled={isProcessing || !isSignedIn || !selectedAddressId || isAddingAddress || checkingDelivery || !deliveryStatus?.eligible}
                 >
-                  {isProcessing ? 'Processing...' : 'Pay Securely'} 
+                  {isProcessing ? 'Processing...' : paymentMethod === 'COD' ? 'Place Order' : 'Pay Securely'} 
                   {!isProcessing && <ChevronRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />}
                 </Button>
                 
-                <p className="text-center text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1.5">
-                  <ShieldCheck size={14} /> 100% Secure Payment Encrypted via Razorpay
-                </p>
+                {paymentMethod === 'Razorpay' && (
+                  <p className="text-center text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1.5">
+                    <ShieldCheck size={14} /> 100% Secure Payment Encrypted via Razorpay
+                  </p>
+                )}
               </div>
             </section>
 
@@ -333,7 +432,7 @@ export default function CheckoutPage() {
               <h2 className="text-lg font-bold tracking-tight mb-6">Order Summary</h2>
               
               <div className="space-y-4 mb-6 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar">
-                {cartItems.map(item => (
+                {cartItems.map((item: any) => (
                   <div key={`${item._id}-${item.variant?._id || 'base'}`} className="flex gap-4 group">
                     <div className="w-20 h-24 rounded-md overflow-hidden bg-muted shrink-0">
                       <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

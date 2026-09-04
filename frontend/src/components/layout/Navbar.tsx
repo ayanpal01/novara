@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingCart, Menu, Search, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SignInButton, UserButton, useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/contexts/AuthContext';
 import MobileMenu from './MobileMenu';
 import { useState, useEffect } from 'react';
 import { useCartStore, useCartCount } from '@/lib/store';
@@ -13,7 +13,8 @@ import CartSheet from '../cart/CartSheet';
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, isSignedIn, user } = useUser();
+  const { logout } = useAuth();
   
   const { toggleCart } = useCartStore();
   const cartCount = useCartCount();
@@ -60,7 +61,7 @@ export default function Navbar() {
               <span className="sr-only">Search</span>
             </Button>
             
-            {mounted && isLoaded && userId && (
+            {mounted && isLoaded && isSignedIn && (
               <Link 
                 href="/wishlist" 
                 className={`hidden sm:flex items-center justify-center h-10 w-10 rounded-full hover:bg-black/5 ${!isScrolled && isHome ? 'text-white hover:text-white hover:bg-white/10' : 'text-foreground'}`}
@@ -86,21 +87,20 @@ export default function Navbar() {
             </Button>
 
             <div className="hidden sm:flex items-center gap-2 ml-2">
-              {!isLoaded ? null : !userId ? (
-                <SignInButton mode="modal">
+              {!isLoaded ? null : !isSignedIn ? (
+                <Link href="/sign-in">
                   <Button variant={!isScrolled && isHome ? "outline" : "default"} className={!isScrolled && isHome ? "bg-transparent text-white border-white hover:bg-white hover:text-black rounded-full" : "rounded-full"}>
                     Sign In
                   </Button>
-                </SignInButton>
+                </Link>
               ) : (
-                <UserButton 
-                  afterSignOutUrl="/" 
-                  appearance={{
-                    elements: {
-                      avatarBox: "w-8 h-8 rounded-full border border-border"
-                    }
-                  }}
-                />
+                <Link href="/profile" className="flex items-center justify-center w-8 h-8 rounded-full bg-muted border border-border overflow-hidden">
+                  {user?.imageUrl ? (
+                    <img src={user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-bold">{user?.fullName?.charAt(0) || user?.primaryEmailAddress?.emailAddress?.charAt(0) || 'U'}</span>
+                  )}
+                </Link>
               )}
             </div>
 

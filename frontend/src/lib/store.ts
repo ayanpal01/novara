@@ -7,8 +7,13 @@ export interface CartItem {
   slug: string;
   price: number;
   image: string;
-  size: string;
-  color?: string;
+  size?: string; // Legacy
+  color?: string; // Legacy
+  variant?: {
+    _id: string;
+    sku?: string;
+    attributes: Record<string, string>;
+  };
   qty: number;
   stock: number; // Max stock available for this specific size/color
 }
@@ -17,8 +22,8 @@ interface CartStore {
   cartItems: CartItem[];
   isOpen: boolean;
   addItem: (item: CartItem) => void;
-  removeItem: (id: string, size: string, color?: string) => void;
-  updateQuantity: (id: string, size: string, qty: number, color?: string) => void;
+  removeItem: (id: string, variantId?: string, size?: string, color?: string) => void;
+  updateQuantity: (id: string, qty: number, variantId?: string, size?: string, color?: string) => void;
   clearCart: () => void;
   setIsOpen: (isOpen: boolean) => void;
   toggleCart: () => void;
@@ -32,18 +37,23 @@ export const useCartStore = create<CartStore>()(
       
       addItem: (item) => {
         const { cartItems } = get();
-        const existingItem = cartItems.find(
-          (x) => x._id === item._id && x.size === item.size && x.color === item.color
-        );
+        const existingItem = cartItems.find((x) => {
+          if (item.variant && x.variant) return x._id === item._id && x.variant._id === item.variant._id;
+          return x._id === item._id && x.size === item.size && x.color === item.color;
+        });
 
         if (existingItem) {
           // Update quantity if item already exists
           set({
-            cartItems: cartItems.map((x) =>
-              x._id === item._id && x.size === item.size && x.color === item.color
+            cartItems: cartItems.map((x) => {
+              const isMatch = item.variant && x.variant 
+                ? x._id === item._id && x.variant._id === item.variant._id
+                : x._id === item._id && x.size === item.size && x.color === item.color;
+              
+              return isMatch
                 ? { ...x, qty: Math.min(x.stock, x.qty + item.qty) } // Don't exceed stock
-                : x
-            ),
+                : x;
+            }),
           });
         } else {
           // Add new item
@@ -51,21 +61,26 @@ export const useCartStore = create<CartStore>()(
         }
       },
       
-      removeItem: (id, size, color) => {
+      removeItem: (id, variantId, size, color) => {
         set((state) => ({
-          cartItems: state.cartItems.filter(
-            (x) => !(x._id === id && x.size === size && x.color === color)
-          ),
+          cartItems: state.cartItems.filter((x) => {
+            if (variantId && x.variant) return !(x._id === id && x.variant._id === variantId);
+            return !(x._id === id && x.size === size && x.color === color);
+          }),
         }));
       },
       
-      updateQuantity: (id, size, qty, color) => {
+      updateQuantity: (id, qty, variantId, size, color) => {
         set((state) => ({
-          cartItems: state.cartItems.map((x) =>
-            x._id === id && x.size === size && x.color === color
+          cartItems: state.cartItems.map((x) => {
+            const isMatch = variantId && x.variant 
+              ? x._id === id && x.variant._id === variantId
+              : x._id === id && x.size === size && x.color === color;
+              
+            return isMatch
               ? { ...x, qty: Math.max(1, Math.min(x.stock, qty)) }
-              : x
-          ),
+              : x;
+          }),
         }));
       },
       

@@ -3,7 +3,7 @@
 import { ShoppingBag, Check, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAuth } from '@clerk/nextjs';
+import { useUser } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 interface AddToCartSectionProps {
@@ -25,11 +25,11 @@ export default function AddToCartSection({
   isWishlisted,
   onToggleWishlist
 }: AddToCartSectionProps) {
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, isSignedIn } = useUser();
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!isLoaded || !userId) {
+    if (!isLoaded || !isSignedIn) {
       toast.error('Please sign in to add to wishlist');
       return;
     }

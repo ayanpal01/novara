@@ -30,6 +30,10 @@ const addressValidationRules = [
   body('state').trim().notEmpty().withMessage('State is required'),
   body('pincode').trim().notEmpty().withMessage('Pincode is required')
     .matches(/^\d{6}$/).withMessage('Please enter a valid 6-digit pincode'),
+  body('country').optional().isString().trim(),
+  body('latitude').optional().isNumeric(),
+  body('longitude').optional().isNumeric(),
+  body('isDefault').optional().isBoolean(),
   body('label').optional().isIn(['Home', 'Work', 'Other']).withMessage('Invalid address label')
 ];
 

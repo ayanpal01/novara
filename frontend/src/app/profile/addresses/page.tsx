@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/contexts/AuthContext';
 import api from '@/lib/axios';
 import { MapPin, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,8 @@ import AddressForm, { AddressFormValues } from '@/components/address/AddressForm
 import DeleteAddressDialog from '@/components/address/DeleteAddressDialog';
 
 export default function MyAddressesPage() {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { isLoaded, getToken } = useAuth();
+  const { isSignedIn } = useUser();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -108,7 +109,7 @@ export default function MyAddressesPage() {
         />
       ) : editingAddress ? (
         <AddressForm 
-          initialData={editingAddress}
+          initialData={editingAddress as any}
           onSubmit={handleEditSubmit}
           onCancel={() => setEditingAddress(null)}
         />

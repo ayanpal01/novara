@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Plus, X, Upload, Trash2, RefreshCw, Settings2 } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/contexts/AuthContext';;
 
 interface Category {
   _id: string;
@@ -208,7 +208,7 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
           trackInventory: true
         },
         isActive: true
-      };
+      } as ProductVariant;
     });
 
     setVariants(newVariants);
@@ -281,7 +281,7 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
       formData.append('status', status);
       formData.append('seoTitle', seoTitle);
       formData.append('seoDescription', seoDescription);
-      formData.append('tags', tags.split(',').map(t => t.trim()).filter(Boolean).join(','));
+      formData.append('tags', tags.split(',').map((t: string) => t.trim()).filter(Boolean).join(','));
       
       formData.append('options', JSON.stringify(options));
       formData.append('variants', JSON.stringify(variants));

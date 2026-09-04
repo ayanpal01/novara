@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/contexts/AuthContext';;
 import api from '@/lib/axios';
 import Link from 'next/link';
 import { Package, MapPin, Heart, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function ProfileOverview() {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const { user } = useUser();
+  const { isLoaded, getToken } = useAuth();
+  const { user, isSignedIn } = useUser();
   const [stats, setStats] = useState({ orders: 0, addresses: 0 });
   const [recentOrder, setRecentOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ export default function ProfileOverview() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Welcome back, {user?.firstName || 'User'}!</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Welcome back, {user?.fullName || 'User'}!</h2>
         <p className="text-muted-foreground mt-1">Manage your account settings, orders, and addresses.</p>
       </div>
 
@@ -77,11 +77,11 @@ export default function ProfileOverview() {
               <h3 className="font-semibold">Recent Order</h3>
               <p className="text-sm text-muted-foreground">Placed on {new Date(recentOrder.createdAt).toLocaleDateString()}</p>
             </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/profile/orders/${recentOrder._id}`}>
+            <Link href={`/profile/orders/${recentOrder._id}`}>
+              <Button variant="outline" size="sm">
                 View Details <ArrowRight size={14} className="ml-2" />
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
           <div className="p-6">
             <div className="flex gap-4 items-center">
@@ -110,9 +110,9 @@ export default function ProfileOverview() {
           <Package className="mx-auto text-muted-foreground opacity-30 mb-4" size={32} />
           <h3 className="font-medium mb-1">No orders yet</h3>
           <p className="text-sm text-muted-foreground mb-4">When you place an order, it will appear here.</p>
-          <Button asChild>
-            <Link href="/shop">Start Shopping</Link>
-          </Button>
+          <Link href="/shop">
+            <Button>Start Shopping</Button>
+          </Link>
         </div>
       )}
     </div>

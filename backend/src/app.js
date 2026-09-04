@@ -3,8 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+require('./config/firebase');
 
-const { clerkMiddleware } = require('@clerk/express');
+
 
 const app = express();
 
@@ -16,7 +17,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-app.use(clerkMiddleware());
+
 
 app.get('/api', (req, res) => {
   res.json({ message: 'API is running...' });
@@ -51,6 +52,7 @@ app.use('/api/categories', require('./routes/category.routes'));
 app.use('/api/cart', require('./routes/cart.routes'));
 app.use('/api/wishlist', require('./routes/wishlist.routes'));
 app.use('/api/reviews', require('./routes/review.routes'));
+app.use('/api/delivery', require('./routes/delivery.routes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

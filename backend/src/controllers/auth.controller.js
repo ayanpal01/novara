@@ -9,10 +9,15 @@ exports.getMe = async (req, res) => {
   }
 };
 
-exports.syncClerkUser = async (req, res) => {
+exports.syncFirebaseUser = async (req, res) => {
   try {
-    const { clerkId, email, name, avatar } = req.body;
-    let user = await User.findOne({ clerkId });
+    const { firebaseUid, email, name, avatar } = req.body;
+    
+    if (!firebaseUid) {
+      return res.status(400).json({ message: 'firebaseUid is required' });
+    }
+
+    let user = await User.findOne({ firebaseUid });
 
     if (user) {
       user.email = email || user.email;
@@ -20,12 +25,19 @@ exports.syncClerkUser = async (req, res) => {
       user.avatar = avatar || user.avatar;
       await user.save();
     } else {
-      user = await User.create({
-        clerkId,
-        email,
-        name,
-        avatar
-      });
+      // Fallback check by email
+      user = await User.findOne({ email });
+      if (user) {
+        user.firebaseUid = firebaseUid;
+        await user.save();
+      } else {
+        user = await User.create({
+          firebaseUid,
+          email,
+          name: name || email?.split('@')[0] || 'User',
+          avatar
+        });
+      }
     }
 
     res.json(user);

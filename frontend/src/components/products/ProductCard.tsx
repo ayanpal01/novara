@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingBag, Star, Heart, Eye } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useAuth } from '@clerk/nextjs';
+import { useUser } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface Product {
   _id: string;
@@ -17,6 +18,7 @@ interface Product {
   images: string[];
   rating: number;
   numReviews: number;
+  stock?: number;
 }
 
 interface ProductCardProps {
@@ -25,7 +27,8 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
   const [imageError, setImageError] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false); // In a real app, track via global state
   
@@ -42,9 +45,11 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100) 
     : 0;
 
+  const isOutOfStock = product.stock === 0;
+
   const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!isLoaded || !userId) {
+    if (!isLoaded || !isSignedIn) {
       // Trigger sign in or alert
       alert('Please sign in to add to wishlist');
       return;
@@ -72,9 +77,16 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           </button>
 
           {/* Discount Badge */}
-          {hasDiscount && (
+          {hasDiscount && !isOutOfStock && (
             <div className="absolute top-3 left-3 z-20 px-2 py-1 bg-red-600 text-white text-[10px] font-bold tracking-wider uppercase rounded shadow-sm">
               {discountPercent}% OFF
+            </div>
+          )}
+
+          {/* Out of Stock Badge */}
+          {isOutOfStock && (
+            <div className="absolute top-3 left-3 z-20 px-2 py-1 bg-black text-white text-[10px] font-bold tracking-wider uppercase rounded shadow-sm">
+              Sold Out
             </div>
           )}
 
@@ -100,24 +112,29 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           )}
           
           {/* Quick Actions overlay */}
-          <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-10 flex gap-2">
+          <div className="absolute inset-x-0 bottom-0 p-3 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-10 flex flex-col gap-2">
             <button 
-              className="flex-1 bg-background/95 backdrop-blur text-foreground py-2.5 rounded text-sm font-semibold hover:bg-primary hover:text-primary-foreground transition-colors shadow-sm flex items-center justify-center gap-2"
+              disabled={isOutOfStock}
+              className={`w-full py-2.5 rounded text-sm font-semibold transition-colors shadow-sm flex items-center justify-center gap-2 ${
+                isOutOfStock 
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                  : 'bg-foreground/95 backdrop-blur text-background hover:bg-primary hover:text-primary-foreground'
+              }`}
               onClick={(e) => {
                 e.preventDefault();
-                console.log('Quick View', product._id);
+                if (!isOutOfStock) router.push(`/product/${product.slug}`);
               }}
             >
-              <Eye size={16} strokeWidth={1.5} /> <span className="hidden sm:inline">Quick View</span>
+              <ShoppingBag size={16} strokeWidth={1.5} /> <span>{isOutOfStock ? 'Out of Stock' : 'Select Options'}</span>
             </button>
             <button 
-              className="flex-1 bg-foreground/95 backdrop-blur text-background py-2.5 rounded text-sm font-semibold hover:bg-primary hover:text-primary-foreground transition-colors shadow-sm flex items-center justify-center gap-2"
+              className="w-full bg-background/95 backdrop-blur text-foreground py-2.5 rounded text-sm font-semibold hover:bg-primary hover:text-primary-foreground transition-colors shadow-sm flex items-center justify-center gap-2"
               onClick={(e) => {
                 e.preventDefault();
-                console.log('Added to cart', product._id);
+                router.push(`/product/${product.slug}`);
               }}
             >
-              <ShoppingBag size={16} strokeWidth={1.5} /> <span className="hidden sm:inline">Add to Cart</span>
+              <Eye size={16} strokeWidth={1.5} /> <span>Quick View</span>
             </button>
           </div>
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,8 @@ interface Product {
 }
 
 export default function WishlistPage() {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { isLoaded, isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,9 +90,9 @@ export default function WishlistPage() {
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
               Save items you love here to keep track of them and buy them later.
             </p>
-            <Button size="lg" asChild>
-              <Link href="/shop">Explore Products</Link>
-            </Button>
+            <Link href="/shop">
+              <Button size="lg">Explore Products</Button>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

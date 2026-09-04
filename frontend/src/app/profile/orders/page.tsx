@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/contexts/AuthContext';
 import api from '@/lib/axios';
 import Link from 'next/link';
 import { Package, ArrowRight, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function MyOrdersPage() {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { isLoaded, getToken } = useAuth();
+  const { isSignedIn } = useUser();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,9 +49,9 @@ export default function MyOrdersPage() {
           <Package className="mx-auto text-muted-foreground opacity-30 mb-4" size={48} />
           <h3 className="font-semibold text-lg mb-2">No orders found</h3>
           <p className="text-muted-foreground mb-6">You haven't placed any orders yet.</p>
-          <Button asChild>
-            <Link href="/shop">Start Shopping</Link>
-          </Button>
+          <Link href="/shop">
+            <Button>Start Shopping</Button>
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
@@ -87,11 +88,11 @@ export default function MyOrdersPage() {
                   )}
                 </div>
                 
-                <Button variant="outline" size="sm" className="shrink-0 group" asChild>
-                  <Link href={`/profile/orders/${order._id}`}>
+                <Link href={`/profile/orders/${order._id}`}>
+                  <Button variant="outline" size="sm" className="shrink-0 group">
                     Details <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </div>
             </div>
           ))}

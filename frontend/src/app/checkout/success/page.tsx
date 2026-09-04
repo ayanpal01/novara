@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { CheckCircle2, Package, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function CheckoutSuccessPage() {
+import { Suspense } from 'react';
+
+function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order');
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] flex items-center justify-center py-20 px-4">
       <div className="bg-white max-w-lg w-full rounded-2xl border shadow-sm p-8 md:p-12 text-center">
         <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 size={40} className="text-emerald-500" />
@@ -30,18 +31,29 @@ export default function CheckoutSuccessPage() {
 
         <div className="flex flex-col gap-3">
           {orderId && (
-            <Button size="lg" className="h-12 w-full font-semibold group" asChild>
-              <Link href={`/profile/orders/${orderId}`}>
+            <Link href={`/profile/orders/${orderId}`}>
+              <Button size="lg" className="h-12 w-full font-semibold group">
                 View Order Details
                 <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           )}
-          <Button variant="outline" size="lg" className="h-12 w-full font-semibold" asChild>
-            <Link href="/shop">Continue Shopping</Link>
-          </Button>
+          <Link href="/shop">
+            <Button variant="outline" size="lg" className="h-12 w-full font-semibold">
+              Continue Shopping
+            </Button>
+          </Link>
         </div>
       </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <div className="min-h-screen bg-[#fcfcfc] flex items-center justify-center py-20 px-4">
+      <Suspense fallback={<div className="animate-pulse">Loading order status...</div>}>
+        <SuccessContent />
+      </Suspense>
     </div>
   );
 }

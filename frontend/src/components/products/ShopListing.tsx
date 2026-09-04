@@ -27,7 +27,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-export default function ShopListing() {
+export default function ShopListing({ initialCategory }: { initialCategory?: string }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -41,7 +41,7 @@ export default function ShopListing() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   
   // Filters State
-  const [category, setCategory] = useState(searchParams.get('category') || '');
+  const [category, setCategory] = useState(searchParams.get('category') || initialCategory || '');
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
   const [sort, setSort] = useState(searchParams.get('sort') || '-createdAt');

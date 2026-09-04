@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/contexts/AuthContext';
 import api from '@/lib/axios';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, Clock, Truck, PackageCheck, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { isLoaded, getToken } = useAuth();
+  const { isSignedIn } = useUser();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -90,7 +92,7 @@ export default function OrderDetailsPage() {
             </div>
             <div className="divide-y">
               {order.orderItems.map((item: any) => (
-                <div key={item._id} className="p-6 flex flex-col sm:flex-row gap-6">
+                <div key={item._id} className="p-6 flex flex-col sm:flex-row gap-6 border-b last:border-0">
                   <div className="w-24 h-32 bg-muted rounded-md overflow-hidden shrink-0 border">
                     {item.image && (
                       <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -111,6 +113,67 @@ export default function OrderDetailsPage() {
                   </div>
                 </div>
               ))}
+              
+              <div className="p-6 space-y-6">
+                <div className="bg-muted p-4 rounded-lg flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Tracking ID</p>
+                    <p className="text-sm text-muted-foreground">{order.tracking?.trackingId || 'Not available yet'}</p>
+                  </div>
+                  {order.tracking?.trackingUrl && (
+                    <a href={order.tracking.trackingUrl} target="_blank" rel="noreferrer">
+                      <Button variant="outline" size="sm">Track Package</Button>
+                    </a>
+                  )}
+                </div>
+                
+                {order.estimatedDeliveryDate && (
+                  <div className="bg-primary/10 p-4 rounded-lg">
+                    <p className="text-sm font-semibold text-primary">Estimated Delivery</p>
+                    <p className="text-sm">{new Date(order.estimatedDeliveryDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                  </div>
+                )}
+                
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-4">Order Timeline</h3>
+                  <div className="space-y-4">
+                    {['pending', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered'].map((step, index, array) => {
+                      const historyItem = order.orderStatusHistory?.find((h: any) => h.status === step);
+                      const isCurrent = order.orderStatus === step;
+                      const isCompleted = order.orderStatusHistory?.some((h: any) => h.status === step) || array.indexOf(order.orderStatus) >= index;
+                      const isCancelled = order.orderStatus === 'cancelled';
+                      
+                      if (isCancelled && step !== 'pending' && !historyItem) return null;
+                      
+                      return (
+                        <div key={step} className={`flex gap-4 ${isCompleted ? 'opacity-100' : 'opacity-40'}`}>
+                          <div className="flex flex-col items-center">
+                            <div className={`w-4 h-4 rounded-full ${isCurrent ? 'bg-primary ring-4 ring-primary/20' : isCompleted ? 'bg-primary' : 'bg-muted border border-border'}`} />
+                            {index !== array.length - 1 && <div className={`w-0.5 h-full my-1 ${isCompleted && array.indexOf(order.orderStatus) > index ? 'bg-primary' : 'bg-muted'}`} />}
+                          </div>
+                          <div className="pb-4">
+                            <p className="text-sm font-medium capitalize">{step.replace(/_/g, ' ')}</p>
+                            {historyItem && (
+                              <p className="text-xs text-muted-foreground">{new Date(historyItem.changedAt).toLocaleString()}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {order.orderStatus === 'cancelled' && (
+                      <div className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className="w-4 h-4 rounded-full bg-red-500 ring-4 ring-red-500/20" />
+                        </div>
+                        <div className="pb-4">
+                          <p className="text-sm font-medium text-red-500">Cancelled</p>
+                          <p className="text-xs text-muted-foreground">Order was cancelled.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

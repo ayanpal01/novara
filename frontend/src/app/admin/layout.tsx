@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import api from '@/lib/axios';
 import Link from 'next/link';
@@ -12,6 +12,7 @@ import {
   Users, 
   Settings,
   MessageSquare,
+  Tags,
   LogOut,
   ChevronRight,
   Menu,
@@ -24,6 +25,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/s
 const ADMIN_LINKS = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Products', href: '/admin/products', icon: Package },
+  { name: 'Categories', href: '/admin/categories', icon: Tags },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
@@ -35,7 +37,8 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { isLoaded, getToken } = useAuth();
+  const { isSignedIn } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/contexts/AuthContext';;
 import api from '@/lib/axios';
 import { 
   DollarSign, 
@@ -11,7 +11,7 @@ import {
   ArrowUpRight,
   ArrowRight
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
 import { 
   LineChart, 
@@ -28,11 +28,21 @@ interface Stats {
   orders: number;
   products: number;
   customers: number;
+  statusDistribution: {
+    pending: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
+    cancelled: number;
+  };
+  lowStockProducts: number;
 }
 
 interface Order {
   _id: string;
-  user: { name: string; email: string };
+  orderNumber: string;
+  user: { firstName: string; lastName: string; email: string };
+  pricing: { total: number };
   totalPrice: number;
   isPaid: boolean;
   orderStatus: string;
@@ -67,8 +77,8 @@ export default function AdminDashboardPage() {
         const token = await getToken();
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const [statsRes, ordersRes] = await Promise.all([
-          api.get('/admin/stats', config),
-          api.get('/orders?limit=5', config)
+          api.get('/admin/dashboard', config),
+          api.get('/admin/orders?limit=5', config)
         ]);
         
         setStats(statsRes.data);
@@ -131,6 +141,26 @@ export default function AdminDashboardPage() {
           );
         })}
       </div>
+      
+      {/* Status Distribution & Low Stock */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-yellow-50/50 border-yellow-200 border rounded-xl p-6 shadow-sm">
+          <p className="text-sm font-medium text-yellow-800">Pending Orders</p>
+          <h3 className="text-2xl font-bold mt-1 text-yellow-900">{stats?.statusDistribution.pending || 0}</h3>
+        </div>
+        <div className="bg-blue-50/50 border-blue-200 border rounded-xl p-6 shadow-sm">
+          <p className="text-sm font-medium text-blue-800">Processing Orders</p>
+          <h3 className="text-2xl font-bold mt-1 text-blue-900">{stats?.statusDistribution.processing || 0}</h3>
+        </div>
+        <div className="bg-purple-50/50 border-purple-200 border rounded-xl p-6 shadow-sm">
+          <p className="text-sm font-medium text-purple-800">Shipped Orders</p>
+          <h3 className="text-2xl font-bold mt-1 text-purple-900">{stats?.statusDistribution.shipped || 0}</h3>
+        </div>
+        <div className="bg-red-50/50 border-red-200 border rounded-xl p-6 shadow-sm">
+          <p className="text-sm font-medium text-red-800">Low Stock Alerts</p>
+          <h3 className="text-2xl font-bold mt-1 text-red-900">{stats?.lowStockProducts || 0} Products</h3>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Revenue Chart */}
@@ -156,9 +186,9 @@ export default function AdminDashboardPage() {
         <div className="bg-background rounded-xl p-6 border shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold">Recent Orders</h2>
-            <Button variant="ghost" size="sm" asChild className="text-primary">
-              <Link href="/admin/orders">View All</Link>
-            </Button>
+            <Link href="/admin/orders" className={buttonVariants({ variant: "ghost", size: "sm", className: "text-primary" })}>
+              View All
+            </Link>
           </div>
           
           <div className="flex-1 overflow-y-auto">
@@ -170,10 +200,10 @@ export default function AdminDashboardPage() {
                   <div key={order._id} className="flex flex-col gap-2 pb-4 border-b last:border-0">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-sm font-medium">{order.user?.name || 'Guest'}</p>
+                        <p className="text-sm font-medium">{order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Guest'} <span className="text-muted-foreground ml-1">({order.orderNumber})</span></p>
                         <p className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</p>
                       </div>
-                      <span className="font-semibold text-sm">₹{order.totalPrice.toFixed(2)}</span>
+                      <span className="font-semibold text-sm">₹{order.pricing ? order.pricing.total.toFixed(2) : order.totalPrice.toFixed(2)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${

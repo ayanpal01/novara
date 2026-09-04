@@ -1,152 +1,133 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';;
 import api from '@/lib/axios';
-import { Mail, Search } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useAuth } from '@clerk/nextjs';
-
-interface Customer {
-  _id: string;
-  name: string;
-  email: string;
-  clerkId: string;
-  role: string;
-  createdAt: string;
-}
+import { Search, MapPin, Phone, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const { getToken } = useAuth();
+  const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const { getToken } = useAuth();
 
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
+        setLoading(true);
         const token = await getToken();
-        const { data } = await api.get('/admin/customers', {
+        const queryParams = new URLSearchParams();
+        if (searchTerm) queryParams.append('search', searchTerm);
+        
+        const { data } = await api.get(`/admin/customers?${queryParams.toString()}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setCustomers(data);
-        setFilteredCustomers(data);
+        setCustomers(data?.customers || []);
       } catch (error) {
-        toast.error('Failed to load customers');
+        console.error('Failed to fetch customers', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchCustomers();
-  }, [getToken]);
-
-  useEffect(() => {
-    if (searchTerm) {
-      setFilteredCustomers(
-        customers.filter(c => 
-          c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          c.email.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-    } else {
-      setFilteredCustomers(customers);
-    }
-  }, [searchTerm, customers]);
+    
+    const timeoutId = setTimeout(() => {
+      fetchCustomers();
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [getToken, searchTerm]);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
-          <p className="text-muted-foreground mt-1">View registered customers and their accounts.</p>
+          <p className="text-muted-foreground mt-1">Manage and view registered customer accounts.</p>
         </div>
       </div>
 
-      <div className="bg-background border rounded-xl shadow-sm overflow-hidden flex flex-col">
-        {/* Toolbar */}
-        <div className="p-4 border-b">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-            <input 
-              type="text"
-              placeholder="Search by name or email..."
-              className="w-full pl-9 pr-4 py-2 bg-muted/50 border rounded-md text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-xl border shadow-sm">
+        <div className="relative w-full max-w-md">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input 
+            type="text" 
+            placeholder="Search by Name or Email..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-muted/20 border rounded-lg text-sm focus:outline-none focus:border-black transition-colors"
+          />
         </div>
+      </div>
 
-        {/* Table */}
+      {/* Table */}
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
               <tr>
                 <th className="px-6 py-4 font-medium">Customer</th>
                 <th className="px-6 py-4 font-medium">Contact</th>
-                <th className="px-6 py-4 font-medium">Role</th>
-                <th className="px-6 py-4 font-medium">Registered Date</th>
-                <th className="px-6 py-4 font-medium">Platform ID</th>
-                <th className="px-6 py-4 font-medium text-right">Actions</th>
+                <th className="px-6 py-4 font-medium">Location</th>
+                <th className="px-6 py-4 font-medium">Joined Date</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {loading ? (
-                Array(5).fill(0).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-48" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-16" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24 ml-auto" /></td>
-                  </tr>
-                ))
-              ) : filteredCustomers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
-                    No customers found.
-                  </td>
+                  <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">Loading customers...</td>
+                </tr>
+              ) : customers.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">No customers found.</td>
                 </tr>
               ) : (
-                filteredCustomers.map((customer) => (
-                  <tr key={customer._id} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-6 py-4 font-medium">
-                      {customer.name}
+                customers.map((customer) => (
+                  <tr key={customer._id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
+                          {(customer.name?.[0] || customer.email?.[0] || 'U').toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-base">
+                            {customer.name || customer.email?.split('@')[0] || 'Unknown User'}
+                          </p>
+                          <p className="text-xs text-muted-foreground capitalize">{customer.role}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
-                      <a href={`mailto:${customer.email}`} className="flex items-center gap-2 text-primary hover:underline">
-                        <Mail size={14} /> {customer.email}
-                      </a>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Mail size={14} /> <span>{customer.email}</span>
+                        </div>
+                        {customer.phone && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Phone size={14} /> <span>{customer.phone}</span>
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${
-                        customer.role === 'admin' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        {customer.role || 'user'}
-                      </span>
+                      {customer.addresses && customer.addresses.length > 0 ? (
+                        <div className="flex items-start gap-2 text-muted-foreground">
+                          <MapPin size={14} className="mt-0.5 shrink-0" /> 
+                          <span className="line-clamp-2">{customer.addresses[0].city}, {customer.addresses[0].state}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground italic">No address provided</span>
+                      )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-muted-foreground">
                       {new Date(customer.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-xs font-mono text-muted-foreground">
-                      {customer.clerkId || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <a href={`/admin/orders?user=${customer._id}`} className="text-xs font-semibold text-primary hover:underline bg-primary/10 px-3 py-1.5 rounded-full inline-block transition-colors">
-                        View Orders
-                      </a>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
-        </div>
-        
-        <div className="p-4 border-t text-xs text-muted-foreground bg-muted/20">
-          Showing {filteredCustomers.length} of {customers.length} total customers.
         </div>
       </div>
     </div>

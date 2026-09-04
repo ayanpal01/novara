@@ -1,109 +1,103 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';;
 import api from '@/lib/axios';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Eye, Filter } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useAuth } from '@clerk/nextjs';
-
-interface Order {
-  _id: string;
-  user: { name: string; email: string };
-  totalPrice: number;
-  isPaid: boolean;
-  paymentStatus: string;
-  orderStatus: string;
-  createdAt: string;
-  orderNumber: string;
-}
+import { Button } from '@/components/ui/button';
+import { Eye, Search, Filter } from 'lucide-react';
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  
-  // To allow linking from customers page
-  const [userIdFilter, setUserIdFilter] = useState('');
-
-  useEffect(() => {
-    // Read from URL query param
-    const params = new URLSearchParams(window.location.search);
-    const user = params.get('user');
-    if (user) {
-      setUserIdFilter(user);
-    }
-  }, []);
-
   const { getToken } = useAuth();
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-      const query = `?limit=15&page=${page}${statusFilter ? `&status=${statusFilter}` : ''}${userIdFilter ? `&user=${userIdFilter}` : ''}`;
-      const { data } = await api.get(`/orders${query}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setOrders(data.orders);
-      setTotalPages(data.pages);
-    } catch (error) {
-      toast.error('Failed to load orders');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
-    fetchOrders();
-  }, [page, statusFilter, userIdFilter, getToken]);
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const token = await getToken();
+        const queryParams = new URLSearchParams();
+        if (searchTerm) queryParams.append('search', searchTerm);
+        if (statusFilter) queryParams.append('status', statusFilter);
+        
+        const { data } = await api.get(`/admin/orders?${queryParams.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setOrders(data.orders);
+      } catch (error) {
+        console.error('Failed to fetch orders', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    // Simple debounce
+    const timeoutId = setTimeout(() => {
+      fetchOrders();
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [getToken, searchTerm, statusFilter]);
+
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      confirmed: 'bg-blue-100 text-blue-800',
+      processing: 'bg-indigo-100 text-indigo-800',
+      shipped: 'bg-purple-100 text-purple-800',
+      out_for_delivery: 'bg-orange-100 text-orange-800',
+      delivered: 'bg-green-100 text-green-800',
+      cancelled: 'bg-red-100 text-red-800',
+      returned: 'bg-gray-100 text-gray-800'
+    };
+    return `text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider ${styles[status] || 'bg-muted text-muted-foreground'}`;
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-          <p className="text-muted-foreground mt-1">
-            {userIdFilter ? 'Viewing orders for specific customer.' : 'Manage and fulfill customer orders.'}
-          </p>
+          <p className="text-muted-foreground mt-1">Manage and track customer orders.</p>
         </div>
-        {userIdFilter && (
-          <Button variant="outline" onClick={() => {
-            setUserIdFilter('');
-            window.history.replaceState({}, '', '/admin/orders');
-          }}>
-            Clear Customer Filter
-          </Button>
-        )}
       </div>
 
-      <div className="bg-background border rounded-xl shadow-sm overflow-hidden flex flex-col">
-        {/* Toolbar */}
-        <div className="p-4 border-b flex gap-4 items-center">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
-            <Filter size={16} /> Filter by Status:
-          </div>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border shadow-sm">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input 
+            type="text" 
+            placeholder="Search by Order ID or Customer Name..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-muted/20 border rounded-lg text-sm focus:outline-none focus:border-black transition-colors"
+          />
+        </div>
+        <div className="relative min-w-[200px]">
+          <Filter size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <select 
-            className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/50"
             value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-muted/20 border rounded-lg text-sm appearance-none focus:outline-none focus:border-black transition-colors"
           >
-            <option value="">All Orders</option>
+            <option value="">All Statuses</option>
             <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
             <option value="processing">Processing</option>
             <option value="shipped">Shipped</option>
+            <option value="out_for_delivery">Out for Delivery</option>
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
         </div>
+      </div>
 
-        {/* Table */}
+      {/* Table */}
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
@@ -112,66 +106,46 @@ export default function AdminOrdersPage() {
                 <th className="px-6 py-4 font-medium">Customer</th>
                 <th className="px-6 py-4 font-medium">Date</th>
                 <th className="px-6 py-4 font-medium">Total</th>
-                <th className="px-6 py-4 font-medium">Payment</th>
                 <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium">Payment</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {loading ? (
-                Array(5).fill(0).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-20" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-16" /></td>
-                    <td className="px-6 py-4"><div className="h-6 bg-muted rounded-full w-16" /></td>
-                    <td className="px-6 py-4"><div className="h-6 bg-muted rounded-full w-20" /></td>
-                    <td className="px-6 py-4"><div className="h-8 bg-muted rounded w-10 ml-auto" /></td>
-                  </tr>
-                ))
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">Loading orders...</td>
+                </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
-                    No orders found.
-                  </td>
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">No orders found.</td>
                 </tr>
               ) : (
                 orders.map((order) => (
-                  <tr key={order._id} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-6 py-4 font-medium text-muted-foreground">
-                      #{order.orderNumber || order._id.substring(order._id.length - 6).toUpperCase()}
-                    </td>
+                  <tr key={order._id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-6 py-4 font-medium text-primary">{order.orderNumber}</td>
                     <td className="px-6 py-4">
-                      <p className="font-medium">{order.user?.name || 'Guest'}</p>
-                      <p className="text-xs text-muted-foreground">{order.user?.email || ''}</p>
+                      {order.user ? (
+                        order.user.name || order.user.email?.split('@')[0] || 'Unknown User'
+                      ) : 'Guest'}
+                      <div className="text-xs text-muted-foreground">{order.user?.email || order.email}</div>
                     </td>
                     <td className="px-6 py-4">{new Date(order.createdAt).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 font-medium">₹{order.totalPrice.toFixed(2)}</td>
+                    <td className="px-6 py-4 font-medium">₹{(order.pricing?.total || order.totalPrice).toFixed(2)}</td>
                     <td className="px-6 py-4">
-                      {order.paymentStatus === 'paid' ? (
-                        <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Paid</span>
-                      ) : (
-                        <span className="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">{order.paymentStatus || 'Unpaid'}</span>
-                      )}
+                      <span className={getStatusBadge(order.orderStatus)}>{order.orderStatus.replace(/_/g, ' ')}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
-                        order.orderStatus === 'delivered' ? 'bg-green-100 text-green-700' :
-                        order.orderStatus === 'shipped' ? 'bg-purple-100 text-purple-700' :
-                        order.orderStatus === 'processing' ? 'bg-blue-100 text-blue-700' :
-                        order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {order.orderStatus}
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase ${order.isPaid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {order.isPaid ? 'Paid' : 'Unpaid'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/admin/orders/${order._id}`}>
-                          <Eye size={16} />
-                        </Link>
-                      </Button>
+                      <Link href={`/admin/orders/${order._id}`}>
+                        <Button variant="outline" size="sm">
+                          <Eye size={14} className="mr-1" /> View
+                        </Button>
+                      </Link>
                     </td>
                   </tr>
                 ))
@@ -179,23 +153,6 @@ export default function AdminOrdersPage() {
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="p-4 border-t flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

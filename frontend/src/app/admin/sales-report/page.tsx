@@ -161,7 +161,7 @@ export default function SalesReportPage() {
                       <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.2} />
                       <XAxis type="number" tickFormatter={(v) => `$${v}`} />
                       <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 12}} />
-                      <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                      <Tooltip formatter={(value: any) => `$${Number(value).toFixed(2)}`} />
                       <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={24} />
                     </BarChart>
                   </ResponsiveContainer>

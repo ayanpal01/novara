@@ -4,6 +4,8 @@ const Product = require('../models/Product');
 const inventoryService = require('../services/inventory.service');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const Settings = require('../models/Settings');
+const { calculateDistance } = require('../utils/geoDistance');
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
@@ -22,10 +24,31 @@ const generateOrderNumber = () => {
 // POST /api/orders/create-payment-order
 exports.createPaymentOrder = async (req, res) => {
   try {
-    const { orderItems, shippingAddress } = req.body;
+    const { orderItems, shippingAddress, paymentMethod = 'Razorpay' } = req.body;
 
     if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({ message: 'No order items' });
+    }
+
+    // STRICT GEO-LOCATION VALIDATION
+    if (!shippingAddress.latitude || !shippingAddress.longitude) {
+      return res.status(400).json({ message: 'Delivery coordinates are missing. Please reselect your address.' });
+    }
+
+    let settings = await Settings.findOne();
+    if (!settings) settings = await Settings.create({});
+
+    const distance = calculateDistance(
+      settings.shopLatitude,
+      settings.shopLongitude,
+      Number(shippingAddress.latitude),
+      Number(shippingAddress.longitude)
+    );
+
+    if (distance > settings.maxDeliveryDistance) {
+      return res.status(400).json({ 
+        message: `Delivery is not available to this location. We only deliver within ${settings.maxDeliveryDistance} km of our store.` 
+      });
     }
 
     let subtotal = 0;
@@ -73,7 +96,8 @@ exports.createPaymentOrder = async (req, res) => {
       subtotal += itemSubtotal;
       
       verifiedOrderItems.push({
-        name: product.name,
+        name: product.name, // Keep for legacy
+        productName: product.name,
         qty: item.qty,
         image: product.images && product.images.length > 0 ? product.images[0] : '',
         price,
@@ -81,7 +105,9 @@ exports.createPaymentOrder = async (req, res) => {
         product: product._id,
         variantId: item.variantId,
         sku,
-        attributes
+        attributes,
+        size: item.size,
+        color: item.color
       });
     }
 
@@ -104,19 +130,41 @@ exports.createPaymentOrder = async (req, res) => {
         city: shippingAddress.city,
         state: shippingAddress.state,
         country: shippingAddress.country || 'India',
-        pincode: shippingAddress.pincode
+        pincode: shippingAddress.pincode,
+        latitude: shippingAddress.latitude,
+        longitude: shippingAddress.longitude
       },
-      paymentMethod: 'Razorpay',
+      deliveryDistance: Number(distance.toFixed(2)),
+      estimatedDeliveryDate: new Date(Date.now() + settings.maxDeliveryDays * 24 * 60 * 60 * 1000),
+      paymentMethod,
       pricing: { subtotal, discount: totalDiscount, shipping, tax, total },
       itemsPrice: subtotal, // legacy
       shippingPrice: shipping, // legacy
       taxPrice: tax, // legacy
       discountPrice: totalDiscount, // legacy
       totalPrice: total, // legacy
-      orderStatus: 'pending',
+      orderStatus: paymentMethod === 'COD' ? 'confirmed' : 'pending',
       paymentStatus: 'pending',
-      isPaid: false
+      isPaid: false,
+      orderStatusHistory: [{
+        status: paymentMethod === 'COD' ? 'confirmed' : 'pending',
+        note: 'Order created automatically.'
+      }]
     });
+
+    if (paymentMethod === 'COD') {
+      try {
+        await inventoryService.deductInventory(order.orderItems);
+        await order.save();
+      } catch (err) {
+        throw err;
+      }
+
+      return res.status(201).json({
+        dbOrderId: order._id,
+        paymentMethod: 'COD'
+      });
+    }
 
     await order.save();
 
@@ -140,7 +188,8 @@ exports.createPaymentOrder = async (req, res) => {
       dbOrderId: order._id,
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency
+      currency: razorpayOrder.currency,
+      paymentMethod: 'Razorpay'
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -149,9 +198,6 @@ exports.createPaymentOrder = async (req, res) => {
 
 // POST /api/orders/verify-payment
 exports.verifyPayment = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
 
@@ -167,20 +213,18 @@ exports.verifyPayment = async (req, res) => {
       throw new Error('Invalid payment signature');
     }
 
-    const order = await Order.findById(orderId).session(session);
+    const order = await Order.findById(orderId);
     if (!order) {
       throw new Error('Order not found');
     }
 
     // Idempotency check: Don't deduct inventory twice
     if (order.isPaid) {
-      await session.commitTransaction();
-      session.endSession();
       return res.json({ success: true, message: 'Payment already verified', orderId });
     }
 
-    // Deduct inventory within transaction
-    await inventoryService.deductInventory(order.orderItems, session);
+    // Deduct inventory
+    await inventoryService.deductInventory(order.orderItems);
 
     order.isPaid = true;
     order.paidAt = Date.now();
@@ -194,15 +238,10 @@ exports.verifyPayment = async (req, res) => {
       email_address: req.user?.email || ''
     };
 
-    await order.save({ session });
-    
-    await session.commitTransaction();
-    session.endSession();
+    await order.save();
     
     res.json({ success: true, message: 'Payment verified successfully', orderId });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     res.status(400).json({ success: false, message: error.message });
   }
 };
@@ -296,17 +335,11 @@ exports.updateOrderStatus = async (req, res) => {
     // If order is cancelled/returned and it wasn't before, restore inventory
     if ((order.orderStatus === 'cancelled' || order.orderStatus === 'returned') && 
         (oldStatus !== 'cancelled' && oldStatus !== 'returned')) {
-      const session = await mongoose.startSession();
-      session.startTransaction();
       try {
-        await inventoryService.restoreInventory(order.orderItems, session);
-        await order.save({ session });
-        await session.commitTransaction();
+        await inventoryService.restoreInventory(order.orderItems);
+        await order.save();
       } catch (err) {
-        await session.abortTransaction();
         throw err;
-      } finally {
-        session.endSession();
       }
     } else {
       await order.save();

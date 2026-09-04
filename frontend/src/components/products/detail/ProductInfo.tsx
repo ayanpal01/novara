@@ -144,8 +144,13 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         price: displayPrice,
         image: product.images?.[0] || '',
         // For backwards compatibility with cart, map the first two options to size/color if they exist
-        size: selectedOptions['Size'] || selectedOptions['size'] || undefined,
-        color: selectedOptions['Color'] || selectedOptions['color'] || undefined,
+        size: selectedOptions['Size'] || selectedOptions['size'] || '',
+        color: selectedOptions['Color'] || selectedOptions['color'] || '',
+        variant: activeVariant ? {
+          _id: activeVariant._id,
+          sku: (activeVariant as any).sku, // sku might not be in the local interface but it's on the backend
+          attributes: activeVariant.attributes
+        } : undefined,
         qty: quantity,
         stock: currentStock,
       });

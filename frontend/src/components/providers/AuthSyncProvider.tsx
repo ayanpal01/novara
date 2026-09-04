@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '@/contexts/AuthContext';
 import { useEffect, useRef } from 'react';
 import api from '@/lib/axios';
 
@@ -14,7 +14,7 @@ export default function AuthSyncProvider({ children }: { children: React.ReactNo
       const syncUser = async () => {
         try {
           await api.post('/auth/sync', {
-            clerkId: user.id,
+            firebaseUid: user.id,
             email: user.primaryEmailAddress?.emailAddress,
             name: user.fullName,
             avatar: user.imageUrl,

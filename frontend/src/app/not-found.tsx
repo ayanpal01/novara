@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { FileQuestion } from 'lucide-react';
 
 export default function NotFound() {
@@ -13,12 +13,12 @@ export default function NotFound() {
         The page you are looking for doesn't exist or has been moved.
       </p>
       <div className="flex gap-4">
-        <Button asChild variant="outline">
-          <Link href="/shop/men">Shop Men</Link>
-        </Button>
-        <Button asChild>
-          <Link href="/">Return Home</Link>
-        </Button>
+        <Link href="/shop/men" className={buttonVariants({ variant: "outline" })}>
+          Shop Men
+        </Link>
+        <Link href="/" className={buttonVariants()}>
+          Return Home
+        </Link>
       </div>
     </div>
   );

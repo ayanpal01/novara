@@ -15,6 +15,8 @@ const addressSchema = new mongoose.Schema({
   state: { type: String, required: true, trim: true },
   country: { type: String, required: true, default: 'India', trim: true },
   pincode: { type: String, required: true, trim: true },
+  latitude: { type: Number },
+  longitude: { type: Number },
   isDefault: { type: Boolean, default: false }
 }, { timestamps: true });
 
@@ -22,7 +24,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, select: false }, // Hidden by default, optional if using Clerk/OAuth
-  clerkId: { type: String, unique: true, sparse: true }, // Clerk ID if using Clerk
+  firebaseUid: { type: String, unique: true, sparse: true }, // Firebase UID
   avatar: { type: String },
   phone: { type: String },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },

@@ -1,48 +1,67 @@
 const User = require('../models/User');
-const { getAuth } = require('@clerk/express');
+const { getAuth } = require('firebase-admin/auth');
 
-// Middleware to verify Clerk authentication token
-const protect = (req, res, next) => {
-  const auth = getAuth(req);
-  if (auth && auth.userId) {
+// Middleware to verify Firebase authentication token
+const protect = async (req, res, next) => {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return res.status(401).json({ message: 'Not authorized, no token' });
+  }
+
+  try {
+    const decodedToken = await getAuth().verifyIdToken(token);
+    req.firebaseUser = decodedToken;
     next();
-  } else {
-    console.log('Protect middleware failed: no auth.userId', auth);
-    res.status(401).json({ message: 'Not authorized, no user ID' });
+  } catch (error) {
+    console.error('Firebase token verification failed:', error);
+    require('fs').appendFileSync('auth-errors.log', new Date().toISOString() + ': ' + error.toString() + '\\n');
+    res.status(401).json({ message: 'Not authorized, token failed' });
   }
 };
 
-// Middleware to sync Clerk user with MongoDB and attach to req.user
+// Middleware to sync Firebase user with MongoDB and attach to req.user
 const syncUser = async (req, res, next) => {
   try {
-    const auth = getAuth(req);
-    const clerkId = auth.userId;
-    if (!clerkId) {
-      return res.status(401).json({ message: 'Not authorized, no user ID' });
+    if (!req.firebaseUser) {
+      return res.status(401).json({ message: 'Not authorized, no firebase user' });
     }
 
-    let user = await User.findOne({ clerkId });
+    const { uid: firebaseUid, email, name, picture } = req.firebaseUser;
+
+    let user = await User.findOne({ firebaseUid });
 
     if (!user) {
-      // Create user if they don't exist yet in our DB.
-      // In a real app, you might want to fetch details from Clerk API here if needed.
-      user = await User.create({
-        clerkId,
-        name: 'New User', // Placeholder until synced from frontend
-        email: `${clerkId}@placeholder.com`, // Placeholder
-      });
+      // Check if user exists with the same email (if manual signup was used before Google)
+      user = await User.findOne({ email });
+      if (user) {
+        // Link firebaseUid to existing user
+        user.firebaseUid = firebaseUid;
+        await user.save();
+      } else {
+        // Create user if they don't exist yet in our DB.
+        user = await User.create({
+          firebaseUid,
+          name: name || email.split('@')[0], 
+          email: email,
+          avatar: picture || '',
+        });
+      }
     }
 
     req.user = user;
     next();
   } catch (error) {
     console.error(error);
-    res.status(401).json({ message: 'Not authorized, token failed' });
+    res.status(401).json({ message: 'Not authorized, token failed during sync' });
   }
 };
 
 // Middleware to check for Admin role
-const admin = (req, res, next) => {
+const adminCheck = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
     next();
   } else {
@@ -50,4 +69,4 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, syncUser, admin };
+module.exports = { protect, syncUser, admin: adminCheck };

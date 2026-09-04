@@ -33,9 +33,9 @@ export default function CartSheet() {
             <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-4">
               <ShoppingBag size={64} className="opacity-20" />
               <p className="text-lg">Your cart is empty.</p>
-              <Button asChild>
-                <Link href="/shop" onClick={() => setIsOpen(false)}>Continue Shopping</Link>
-              </Button>
+              <Link href="/shop" onClick={() => setIsOpen(false)}>
+                <Button>Continue Shopping</Button>
+              </Link>
             </div>
           ) : (
             <div className="space-y-6">
@@ -102,9 +102,9 @@ export default function CartSheet() {
             </div>
             <p className="text-sm text-muted-foreground mb-6">Shipping and taxes calculated at checkout.</p>
             <div className="flex flex-col gap-3">
-              <Button size="lg" className="w-full text-lg h-14" asChild>
-                <Link href="/checkout" onClick={() => setIsOpen(false)}>Checkout</Link>
-              </Button>
+              <Link href="/checkout" onClick={() => setIsOpen(false)}>
+                <Button size="lg" className="w-full text-lg h-14">Checkout</Button>
+              </Link>
               <Button variant="outline" size="lg" className="w-full" onClick={() => setIsOpen(false)}>
                 Continue Shopping
               </Button>

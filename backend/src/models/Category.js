@@ -16,4 +16,10 @@ const categorySchema = new mongoose.Schema({
 categorySchema.index({ parentCategory: 1 });
 categorySchema.index({ slug: 1 });
 
+categorySchema.pre('save', function() {
+  if (this.isModified('name') && !this.slug) {
+    this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  }
+});
+
 module.exports = mongoose.model('Category', categorySchema);

@@ -82,9 +82,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       <div className="container mx-auto px-4 py-20 max-w-4xl text-center">
         <h1 className="text-3xl font-bold mb-4">Order Not Found</h1>
         <p className="text-muted-foreground mb-8">{error}</p>
-        <Button asChild>
-          <Link href="/orders">Back to Orders</Link>
-        </Button>
+        <Link href="/orders">
+          <Button>Back to Orders</Button>
+        </Link>
       </div>
     );
   }

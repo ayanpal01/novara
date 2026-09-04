@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,9 @@ const addressSchema = z.object({
   state: z.string().min(2, 'State is required'),
   country: z.string().default('India'),
   label: z.enum(['Home', 'Work', 'Other']),
-  isDefault: z.boolean().default(false)
+  isDefault: z.boolean().default(false),
+  latitude: z.number().optional(),
+  longitude: z.number().optional()
 });
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
@@ -34,9 +36,10 @@ interface AddressFormProps {
 
 export default function AddressForm({ initialData, onSubmit, onCancel, isFirstAddress }: AddressFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [locationStatus, setLocationStatus] = useState<string>('');
 
   const { register, handleSubmit, formState: { errors } } = useForm<AddressFormValues>({
-    resolver: zodResolver(addressSchema),
+    resolver: zodResolver(addressSchema) as any,
     defaultValues: {
       name: initialData?.name || '',
       phone: initialData?.phone || '',
@@ -49,11 +52,31 @@ export default function AddressForm({ initialData, onSubmit, onCancel, isFirstAd
       state: initialData?.state || '',
       country: initialData?.country || 'India',
       label: initialData?.label || 'Home',
-      isDefault: initialData?.isDefault || isFirstAddress || false
+      isDefault: initialData?.isDefault || isFirstAddress || false,
+      latitude: initialData?.latitude,
+      longitude: initialData?.longitude
     }
   });
 
-  const handleFormSubmit = async (data: AddressFormValues) => {
+  const getLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('Geolocation is not supported by your browser');
+      return;
+    }
+    setLocationStatus('Locating...');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        register('latitude').onChange({ target: { name: 'latitude', value: position.coords.latitude } });
+        register('longitude').onChange({ target: { name: 'longitude', value: position.coords.longitude } });
+        setLocationStatus('Location captured! ✓');
+      },
+      () => {
+        setLocationStatus('Unable to retrieve your location');
+      }
+    );
+  };
+
+  const handleFormSubmit: SubmitHandler<AddressFormValues> = async (data) => {
     try {
       setIsSubmitting(true);
       await onSubmit(data);
@@ -66,7 +89,7 @@ export default function AddressForm({ initialData, onSubmit, onCancel, isFirstAd
     <div className="bg-white p-6 border rounded-xl shadow-sm">
       <h3 className="font-semibold text-lg mb-6">{initialData ? 'Edit Address' : 'Add a New Address'}</h3>
       
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(handleFormSubmit as any)} className="space-y-6">
         {/* Contact Details */}
         <div>
           <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Contact Details</h4>
@@ -139,6 +162,18 @@ export default function AddressForm({ initialData, onSubmit, onCancel, isFirstAd
                 <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Country</label>
                 <input {...register('country')} readOnly className="w-full rounded-md border bg-muted/10 text-muted-foreground px-3 py-2.5 text-sm outline-none cursor-not-allowed" />
               </div>
+            </div>
+            
+            <div className="bg-muted/10 p-4 rounded-lg border flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">Delivery Coordinates (Required for distance check)</p>
+                <p className="text-xs text-muted-foreground">{locationStatus || 'We need your location to confirm delivery availability.'}</p>
+                <input type="hidden" {...register('latitude')} />
+                <input type="hidden" {...register('longitude')} />
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={getLocation}>
+                Get My Location
+              </Button>
             </div>
           </div>
         </div>

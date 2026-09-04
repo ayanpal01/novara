@@ -9,9 +9,12 @@ const orderSchema = new mongoose.Schema({
     variantId: { type: mongoose.Schema.Types.ObjectId },
     // Snapshot of the product at purchase time
     name: { type: String, required: true },
+    productName: { type: String },
     image: { type: String },
     sku: { type: String },
     attributes: { type: Map, of: String },
+    size: { type: String }, // Legacy compatibility
+    color: { type: String }, // Legacy compatibility
     qty: { type: Number, required: true, min: 1 },
     price: { type: Number, required: true },
     subtotal: { type: Number, required: true }
@@ -29,8 +32,12 @@ const orderSchema = new mongoose.Schema({
     state: { type: String, required: true },
     country: { type: String, required: true, default: 'India' },
     pincode: { type: String, required: true },
-    label: { type: String, default: 'Home' }
+    label: { type: String, default: 'Home' },
+    latitude: { type: Number },
+    longitude: { type: Number }
   },
+  
+  deliveryDistance: { type: Number },
   
   paymentMethod: { type: String, enum: ['Razorpay', 'COD', 'razorpay', 'cod'], default: 'Razorpay' },
   
@@ -61,9 +68,16 @@ const orderSchema = new mongoose.Schema({
   
   orderStatus: { 
     type: String, 
-    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'], 
+    enum: ['pending', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'], 
     default: 'pending' 
   },
+  
+  orderStatusHistory: [{
+    status: { type: String, required: true },
+    changedAt: { type: Date, default: Date.now },
+    changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    note: { type: String }
+  }],
   
   paymentStatus: {
     type: String,
@@ -77,6 +91,10 @@ const orderSchema = new mongoose.Schema({
   isDelivered: { type: Boolean, default: false },
   deliveredAt: { type: Date },
   
+  estimatedDeliveryDate: { type: Date },
+  shippedAt: { type: Date },
+  outForDeliveryAt: { type: Date },
+  
   tracking: {
     trackingId: String,
     courier: String,
@@ -86,7 +104,8 @@ const orderSchema = new mongoose.Schema({
   trackingId: String,
   trackingUrl: String,
   
-  notes: String
+  notes: String,
+  adminNotes: String
 }, { timestamps: true });
 
 orderSchema.index({ user: 1, createdAt: -1 });

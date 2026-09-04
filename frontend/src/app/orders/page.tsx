@@ -17,6 +17,7 @@ interface OrderItem {
 
 interface Order {
   _id: string;
+  orderNumber?: string;
   totalPrice: number;
   orderStatus: string;
   isPaid: boolean;
@@ -77,9 +78,9 @@ export default function OrdersPage() {
             <Package size={48} className="mx-auto text-muted-foreground mb-4 opacity-50" />
             <h2 className="text-xl font-semibold mb-2">No orders yet</h2>
             <p className="text-muted-foreground mb-6">Looks like you haven't made your first purchase.</p>
-            <Button asChild>
-              <Link href="/shop">Start Shopping</Link>
-            </Button>
+            <Link href="/shop">
+              <Button>Start Shopping</Button>
+            </Link>
           </div>
         ) : (
           <div className="space-y-6">
@@ -104,11 +105,11 @@ export default function OrdersPage() {
                     <span className={cn("px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider", getStatusColor(order.orderStatus))}>
                       {order.orderStatus}
                     </span>
-                    <Button variant="outline" size="sm" className="gap-2" asChild>
-                      <Link href={`/order/${order._id}`}>
+                    <Link href={`/order/${order._id}`}>
+                      <Button variant="outline" size="sm" className="gap-2">
                         View Details <ArrowRight size={14} />
-                      </Link>
-                    </Button>
+                      </Button>
+                    </Link>
                   </div>
                 </div>
 
